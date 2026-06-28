@@ -12,7 +12,7 @@ Lexer :: struct {
 }
 
 advance :: proc(l: ^Lexer) {
-	if l.pos >= len(l.input) {
+	if l.read_pos >= len(l.input) {
 		l.cur_rune = 0
 		l.pos = l.read_pos
 		return
@@ -67,7 +67,17 @@ next_token :: proc(l: ^Lexer) -> Token {
 }
 
 skip_whitespace :: proc(l: ^Lexer) {
-	for l.cur_rune == ' ' || l.cur_rune == '\t' || l.cur_rune == '\r' do advance(l)
+	for {
+		if l.cur_rune == ' ' || l.cur_rune == '\t' || l.cur_rune == '\r' {
+			advance(l)
+		} else if l.cur_rune == '#' {
+			for l.cur_rune != '\n' && l.cur_rune != 0 {
+				advance(l)
+			}
+		} else {
+			break
+		}
+	}
 }
 
 is_valid_ident_char :: proc(r: rune) -> bool {

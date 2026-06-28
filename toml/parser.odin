@@ -87,7 +87,12 @@ parse_document :: proc(p: ^Parser) -> Toml_Document {
 			}
 
 		case:
-			fmt.eprintf("Syntax error on line %d: Unexpected token %v\n", tok.line, tok.kind)
+			fmt.eprintf(
+				"Syntax error on line %d: Unexpected token %v ('%s')\n",
+				tok.line,
+				tok.kind,
+				tok.text,
+			)
 			p.pos += 1
 		}
 	}
