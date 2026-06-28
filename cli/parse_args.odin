@@ -1,8 +1,9 @@
-package args
+package cli
 
 import "core:flags"
 import "core:fmt"
 import "core:os"
+import "core:time"
 
 ExitCode :: enum {
 	Success = 0,
@@ -43,14 +44,57 @@ Add_Command_Flags :: struct {
 @(private = "file")
 run_build :: proc(args: []string) -> ExitCode {
 	options: Build_Command_Flags
-
 	flags.parse_or_exit(&options, args, .Unix)
+
+	cmd := make([dynamic]string)
+	defer delete(cmd)
+
+	append(&cmd, "odin", "build", ".")
+
+	if options.release {
+		append(&cmd, "-o:speed")
+	}
+
+	if options.verbose {
+		append(&cmd, "-show-system-calls")
+	}
+
+	desc := os.Process_Desc {
+		command = cmd[:],
+		stdin   = os.stdin,
+		stdout  = os.stdout,
+		stderr  = os.stderr,
+	}
+
+	start_time := time.now()
+
+	state, start_err := os.process_start(desc)
+	if start_err != nil {
+		fmt.eprintfln("Failed to start build: %v", start_err)
+		return .Error
+	}
+
+	return_state, wait_err := os.process_wait(state)
+	if wait_err != .NONE {
+		fmt.eprintfln("Build failed or was interrupted: %v", wait_err)
+		return .Error
+	}
+
+	if !return_state.success {
+		return .Error
+	}
 
 	fmt.printfln(
 		"[Args] Parsed BUILD - Release: %v, Verbose: %v",
 		options.release,
 		options.verbose,
 	)
+
+
+	fmt.printfln("[PROC RETURN] PID=%d, Exit=%d", return_state.pid, return_state.exit_code)
+
+	duration := time.since(start_time)
+	fmt.printfln("Build finished in %v", duration)
 
 	return .Success
 }
@@ -101,7 +145,7 @@ Dispatch :: proc() -> ExitCode {
 	}
 
 	subcommand_name := os.args[1]
-	cmd_args := os.args[2:]
+	cmd_args := os.args[1:]
 
 	if cmd, ok := commands[subcommand_name]; ok {
 		return cmd.run(cmd_args)

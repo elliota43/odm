@@ -1,12 +1,12 @@
 package main
 
-import "args"
+import "cli"
 import "core:fmt"
 import "core:os"
 import "toml"
 
 main :: proc() {
-	exit_code := args.Dispatch()
+	exit_code := cli.Dispatch()
 
 	os.exit(int(exit_code))
 }
@@ -35,4 +35,3 @@ load_config_demo :: proc() {
 		fmt.println()
 	}
 }
-
