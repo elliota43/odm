@@ -1,0 +1,12 @@
+[package]
+name = "app_clone"
+version = "0.1.0"
+author = "Elliot Anderson"
+
+[dependencies]
+odin-http = "main"
+raylib = "vendor-branch"
+
+[build]
+target = "default"
+optimization = "speed"
